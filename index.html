@@ -4,8 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        iframe {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        iframe.visible {
+            display: block;
+        }
+
+        iframe.visible ~ button {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <button onclick="window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';">Click me for free Robux!</button>
+    <button onclick="playVideo()">Click me for free Robux!</button>
+    <iframe id="video" width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+    <script>
+        function playVideo() {
+            const video = document.getElementById('video');
+            video.classList.toggle('visible');
+            if (video.classList.contains('visible')) {
+                video.src = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1"; // Reset src to enable autoplay and mute
+            }
+        }
+    </script>
 </body>
 </html>
