@@ -55,15 +55,17 @@
     </style>
 </head>
 <body>
-    <button onclick="playVideo()">Click me for free Robux!</button>
+    <button id="playBtn" onclick="playVideo()">Click me for free Robux!</button>
     <iframe id="video" width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
     <script>
         function playVideo() {
             const video = document.getElementById('video');
+            const button = document.getElementById('playBtn');
             video.classList.toggle('visible');
+            button.style.display = video.classList.contains('visible') ? 'none' : 'block';
             if (video.classList.contains('visible')) {
-                video.src = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1"; // Reset src to enable autoplay and mute
+                video.src = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&modestbranding=1"; // Reset src to enable autoplay, mute, and reduce branding
             }
         }
     </script>
