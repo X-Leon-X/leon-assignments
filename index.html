@@ -3,71 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>AI Battle Royale Simulator</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: Arial, sans-serif;
+            background: #1a1a1a;
         }
-
-        button {
-            padding: 15px 40px;
-            font-size: 18px;
-            font-weight: bold;
+        .container {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
             color: white;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #00ff00;
+        }
+        .arena {
+            border: 2px solid #00ff00;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+        .player {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #3d3d3d;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #00ff00;
+        }
+        .log {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .log-entry {
+            margin: 4px 0;
+            color: #00ff00;
+        }
+        button {
+            background: #00ff00;
+            color: black;
             border: none;
-            border-radius: 50px;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 4px;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            margin-bottom: 30px;
+            width: 100%;
+            font-size: 16px;
         }
-
         button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        iframe {
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            display: none;
-        }
-
-        iframe.visible {
-            display: block;
-        }
-
-        iframe.visible ~ button {
-            display: none;
+            background: #00cc00;
         }
     </style>
 </head>
 <body>
-    <button id="playBtn" onclick="playVideo()">Click me for free Robux!</button>
-    <iframe id="video" width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <div class="container">
+        <h1>⚔️ AI Battle Royale Simulator</h1>
+        <div class="arena" id="arena"></div>
+        <div class="stats">
+            <div class="stat-box">
+                <strong>Players Alive:</strong> <span id="alive">10</span>
+            </div>
+            <div class="stat-box">
+                <strong>Round:</strong> <span id="round">1</span>
+            </div>
+        </div>
+        <div class="log" id="log"></div>
+        <button onclick="simulator.start()">Start Battle</button>
+        <button onclick="simulator.reset()">Reset</button>
+    </div>
 
     <script>
-        function playVideo() {
-            const video = document.getElementById('video');
-            const button = document.getElementById('playBtn');
-            video.classList.toggle('visible');
-            button.style.display = video.classList.contains('visible') ? 'none' : 'block';
-            if (video.classList.contains('visible')) {
-                video.src = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&modestbranding=1"; // Reset src to enable autoplay, mute, and reduce branding
+        const simulator = {
+            players: [],
+            log: [],
+            running: false,
+
+            init() {
+                this.players = [];
+                this.log = [];
+                for (let i = 0; i < 10; i++) {
+                    this.players.push({
+                        id: i,
+                        x: Math.random() * 550,
+                        y: Math.random() * 350,
+                        health: 100,
+                        alive: true
+                    });
+                }
+                this.render();
+            },
+
+            start() {
+                if (this.running) return;
+                this.running = true;
+                this.addLog("Battle started!");
+                this.simulate();
+            },
+
+            simulate() {
+                if (!this.running || this.players.filter(p => p.alive).length <= 1) {
+                    this.running = false;
+                    if (this.players.filter(p => p.alive).length === 1) {
+                        const winner = this.players.find(p => p.alive);
+                        this.addLog(`🏆 Player ${winner.id} WINS!`);
+                    }
+                    return;
+                }
+
+                this.players.forEach(p => {
+                    if (!p.alive) return;
+                    p.x += (Math.random() - 0.5) * 20;
+                    p.y += (Math.random() - 0.5) * 20;
+                    p.x = Math.max(0, Math.min(550, p.x));
+                    p.y = Math.max(0, Math.min(350, p.y));
+                });
+
+                this.players.forEach(p1 => {
+                    if (!p1.alive) return;
+                    this.players.forEach(p2 => {
+                        if (!p2.alive || p1.id === p2.id) return;
+                        const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                        if (dist < 30) {
+                            const damage = Math.floor(Math.random() * 40) + 10;
+                            p2.health -= damage;
+                            if (p2.health <= 0) {
+                                p2.alive = false;
+                                this.addLog(`💀 Player ${p2.id} eliminated by Player ${p1.id}`);
+                            }
+                        }
+                    });
+                });
+
+                this.render();
+                setTimeout(() => this.simulate(), 300);
+            },
+
+            render() {
+                const arena = document.getElementById('arena');
+                arena.innerHTML = '';
+                this.players.forEach(p => {
+                    if (p.alive) {
+                        const div = document.createElement('div');
+                        div.className = 'player';
+                        div.style.left = p.x + 'px';
+                        div.style.top = p.y + 'px';
+                        div.style.background = `hsl(${p.id * 36}, 100%, 50%)`;
+                        div.textContent = p.id;
+                        arena.appendChild(div);
+                    }
+                });
+                document.getElementById('alive').textContent = this.players.filter(p => p.alive).length;
+            },
+
+            addLog(msg) {
+                this.log.push(msg);
+                const logEl = document.getElementById('log');
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = msg;
+                logEl.appendChild(entry);
+                logEl.scrollTop = logEl.scrollHeight;
+            },
+
+            reset() {
+                this.running = false;
+                this.init();
+                document.getElementById('log').innerHTML = '';
             }
-        }
+        };
+
+        simulator.init();
     </script>
 </body>
 </html>
