@@ -783,17 +783,19 @@
     </div>
 
     <script>
-        function startBattleRoyale() {
+        // Make sure these functions are globally accessible
+        window.startBattleRoyale = function () {
             document.getElementById('menuScreen').style.display = 'none';
             document.getElementById('battleRoyaleContainer').classList.add('active');
             simulator.init();
-        }
+        };
 
-        function startRPS() {
+        window.startRPS = function () {
             document.getElementById('menuScreen').style.display = 'none';
             document.getElementById('rpsContainer').classList.add('active');
             rpsSimulator.init();
-        }
+        };
+
 
         function backToMenu() {
             document.getElementById('menuScreen').style.display = 'block';
