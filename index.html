@@ -249,10 +249,10 @@
 
             isCollidingWithRock(x, y, radius = 10) {
                 return this.rocks.some(rock => {
-                    return x + radius > rock.x &&
-                           x - radius < rock.x + rock.width &&
-                           y + radius > rock.y &&
-                           y - radius < rock.y + rock.height;
+                    const rockCenterX = rock.x + rock.width / 2;
+                    const rockCenterY = rock.y + rock.height / 2;
+                    const dist = Math.hypot(x - rockCenterX, y - rockCenterY);
+                    return dist < radius + 15;
                 });
             },
 
@@ -334,8 +334,10 @@
                     // Check for rock collision and bounce
                     let bounced = false;
                     this.rocks.forEach(rock => {
-                        if (newX > rock.x && newX < rock.x + rock.width &&
-                            newY > rock.y && newY < rock.y + rock.height) {
+                        const rockCenterX = rock.x + rock.width / 2;
+                        const rockCenterY = rock.y + rock.height / 2;
+                        const dist = Math.hypot(newX - rockCenterX, newY - rockCenterY);
+                        if (dist < 15) {
                             // Bounce: reverse velocity
                             b.vx *= -0.8;
                             b.vy *= -0.8;
@@ -386,25 +388,33 @@
                 // Bullet collision
                 for (let i = this.bullets.length - 1; i >= 0; i--) {
                     const bullet = this.bullets[i];
-                    const target = this.players.find(p => p.id === bullet.targetId && p.alive);
-                    if (target) {
-                        const dist = Math.hypot(bullet.x - target.x, bullet.y - target.y);
+                    let hitTarget = null;
+                    
+                    // Find any player hit by this bullet
+                    for (const p of this.players) {
+                        if (!p.alive || p.id === bullet.shooterId) continue;
+                        const dist = Math.hypot(bullet.x - p.x, bullet.y - p.y);
                         if (dist < 15) {
-                            const damage = this.gameMode === 'sniper' ? 100 : 25;
-                            target.health -= damage;
-                            if (target.health <= 0) {
-                                target.alive = false;
-                                const shooter = this.players.find(p => p.id === bullet.shooterId);
-                                if (target.isUser) {
-                                    this.addLog(`💀 YOU were shot by Player ${shooter.id}`);
-                                } else if (shooter.isUser) {
-                                    this.addLog(`💥 You shot Player ${target.id}`);
-                                } else {
-                                    this.addLog(`💥 Player ${target.id} shot by Player ${shooter.id}`);
-                                }
-                            }
-                            this.bullets.splice(i, 1);
+                            hitTarget = p;
+                            break;
                         }
+                    }
+                    
+                    if (hitTarget) {
+                        const damage = this.gameMode === 'sniper' ? 100 : 25;
+                        hitTarget.health -= damage;
+                        if (hitTarget.health <= 0) {
+                            hitTarget.alive = false;
+                            const shooter = this.players.find(p => p.id === bullet.shooterId);
+                            if (hitTarget.isUser) {
+                                this.addLog(`💀 YOU were shot by Player ${shooter.id}`);
+                            } else if (shooter.isUser) {
+                                this.addLog(`💥 You shot Player ${hitTarget.id}`);
+                            } else {
+                                this.addLog(`💥 Player ${hitTarget.id} shot by Player ${shooter.id}`);
+                            }
+                        }
+                        this.bullets.splice(i, 1);
                     }
                 }
 
