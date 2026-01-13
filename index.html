@@ -532,3 +532,765 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Battle Royale & RPS Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #1a1a1a;
+        }
+        .menu-screen {
+            text-align: center;
+            color: white;
+        }
+        .menu-screen h1 {
+            color: #00ff00;
+            font-size: 48px;
+            margin-bottom: 40px;
+        }
+        .game-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 600px;
+        }
+        .game-card {
+            background: #2d2d2d;
+            padding: 40px;
+            border-radius: 8px;
+            border: 2px solid #00ff00;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .game-card:hover {
+            background: #3d3d3d;
+            box-shadow: 0 0 20px #00ff00;
+            transform: scale(1.05);
+        }
+        .game-card h2 {
+            color: #00ff00;
+            font-size: 28px;
+            margin: 0 0 15px 0;
+        }
+        .game-card p {
+            color: #aaa;
+            font-size: 14px;
+        }
+        .container {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            width: 90%;
+            max-width: 600px;
+            display: none;
+        }
+        .container.active {
+            display: block;
+        }
+        h1 {
+            text-align: center;
+            color: #00ff00;
+        }
+        .arena {
+            border: 2px solid #00ff00;
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+        .player {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            transition: all 0.05s linear;
+        }
+        .player.user {
+            border: 2px solid #ffff00;
+            box-shadow: 0 0 10px #ffff00;
+        }
+        .health-bar {
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background: #ff0000;
+            border-radius: 2px;
+            top: -8px;
+            left: -2.5px;
+        }
+        .health-bar-fill {
+            height: 100%;
+            background: #00ff00;
+            border-radius: 2px;
+        }
+        .bullet {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffff00;
+            border-radius: 50%;
+        }
+        .rock {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at 30% 30%, #888, #444);
+            border-radius: 50%;
+            box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        .rps-sprite {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #3d3d3d;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #00ff00;
+        }
+        .log {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .log-entry {
+            margin: 4px 0;
+            color: #00ff00;
+        }
+        button {
+            background: #00ff00;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .controls {
+            background: #3d3d3d;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .back-button {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-screen" id="menuScreen">
+        <h1>⚔️ GAME ARENA</h1>
+        <div class="game-selection">
+            <div class="game-card" onclick="startBattleRoyale()">
+                <h2>Battle Royale</h2>
+                <p>10 players fight until one remains. WASD to move, click to shoot.</p>
+            </div>
+            <div class="game-card" onclick="startRPS()">
+                <h2>Rock Paper Scissors</h2>
+                <p>Watch rock, paper, and scissors battle for dominance!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="battleRoyaleContainer">
+        <h1>⚔️ AI Battle Royale Simulator</h1>
+        <div class="arena" id="arena"></div>
+        <div class="stats">
+            <div class="stat-box">
+                <strong>Players Alive:</strong> <span id="alive">10</span>
+            </div>
+            <div class="stat-box">
+                <strong>Your Health:</strong> <span id="userHealth">100</span>
+            </div>
+        </div>
+        <div class="controls">
+            <strong>Controls:</strong> WASD to move, MOUSE to aim, CLICK to shoot
+        </div>
+        <div class="log" id="log"></div>
+        <div class="button-group">
+            <button onclick="simulator.startGame('standard')">Standard Game</button>
+            <button onclick="simulator.startGame('sniper')">Sniper Game</button>
+        </div>
+        <button onclick="simulator.reset()">Reset</button>
+        <button class="back-button" onclick="backToMenu()">Back to Menu</button>
+    </div>
+
+    <div class="container" id="rpsContainer">
+        <h1>🪨 Rock Paper Scissors Battle</h1>
+        <div class="arena" id="rpsArena"></div>
+        <div class="stats">
+            <div class="stat-box">
+                <strong>🪨 Rocks:</strong> <span id="rockCount">0</span>
+            </div>
+            <div class="stat-box">
+                <strong>📄 Papers:</strong> <span id="paperCount">0</span>
+            </div>
+            <div class="stat-box">
+                <strong>✂️ Scissors:</strong> <span id="scissorCount">0</span>
+            </div>
+            <div class="stat-box">
+                <strong>Survivors:</strong> <span id="survivors">0</span>
+            </div>
+        </div>
+        <div class="log" id="rpsLog"></div>
+        <button onclick="rpsSimulator.startGame()">Start Battle</button>
+        <button onclick="rpsSimulator.reset()">Reset</button>
+        <button class="back-button" onclick="backToMenu()">Back to Menu</button>
+    </div>
+
+    <script>
+        function startBattleRoyale() {
+            document.getElementById('menuScreen').style.display = 'none';
+            document.getElementById('battleRoyaleContainer').classList.add('active');
+            simulator.init();
+        }
+
+        function startRPS() {
+            document.getElementById('menuScreen').style.display = 'none';
+            document.getElementById('rpsContainer').classList.add('active');
+            rpsSimulator.init();
+        }
+
+        function backToMenu() {
+            document.getElementById('menuScreen').style.display = 'block';
+            document.getElementById('battleRoyaleContainer').classList.remove('active');
+            document.getElementById('rpsContainer').classList.remove('active');
+            simulator.running = false;
+            rpsSimulator.running = false;
+        }
+
+        const simulator = {
+            players: [],
+            bullets: [],
+            rocks: [],
+            log: [],
+            running: false,
+            lastShotTime: {},
+            bulletIdCounter: 0,
+            keys: {},
+            mouseX: 0,
+            mouseY: 0,
+            userPlayerId: -1,
+            gameMode: 'standard',
+
+            init() {
+                this.players = [];
+                this.bullets = [];
+                this.rocks = [];
+                this.log = [];
+                this.lastShotTime = {};
+                this.bulletIdCounter = 0;
+                
+                for (let i = 0; i < 5; i++) {
+                    this.rocks.push({
+                        x: Math.random() * 520,
+                        y: Math.random() * 370,
+                        width: 30,
+                        height: 30
+                    });
+                }
+                
+                let validSpawn = false;
+                let userX, userY;
+                while (!validSpawn) {
+                    userX = Math.random() * 550;
+                    userY = Math.random() * 350;
+                    validSpawn = !this.isCollidingWithRock(userX, userY, 10);
+                }
+                
+                this.players.push({
+                    id: 0,
+                    x: userX,
+                    y: userY,
+                    vx: 0,
+                    vy: 0,
+                    health: 100,
+                    alive: true,
+                    angle: 0,
+                    isUser: true
+                });
+                this.userPlayerId = 0;
+                this.lastShotTime[0] = 0;
+                
+                for (let i = 1; i <= 10; i++) {
+                    let validSpawn = false;
+                    let x, y;
+                    while (!validSpawn) {
+                        x = Math.random() * 550;
+                        y = Math.random() * 350;
+                        validSpawn = !this.isCollidingWithRock(x, y, 10);
+                    }
+                    
+                    this.players.push({
+                        id: i,
+                        x: x,
+                        y: y,
+                        vx: 0,
+                        vy: 0,
+                        health: 100,
+                        alive: true,
+                        angle: Math.random() * Math.PI * 2,
+                        isUser: false
+                    });
+                    this.lastShotTime[i] = 0;
+                }
+                
+                this.render();
+            },
+
+            startGame(mode) {
+                if (this.running) return;
+                this.gameMode = mode;
+                this.running = true;
+                this.addLog(`Battle started! Mode: ${mode === 'standard' ? 'STANDARD' : 'SNIPER'}`);
+                this.simulate();
+            },
+
+            isCollidingWithRock(x, y, radius = 10) {
+                return this.rocks.some(rock => {
+                    const rockCenterX = rock.x + rock.width / 2;
+                    const rockCenterY = rock.y + rock.height / 2;
+                    const dist = Math.hypot(x - rockCenterX, y - rockCenterY);
+                    return dist < radius + 15;
+                });
+            },
+
+            simulate() {
+                if (!this.running || this.players.filter(p => p.alive).length <= 1) {
+                    this.running = false;
+                    const aliveCount = this.players.filter(p => p.alive).length;
+                    if (aliveCount === 1) {
+                        const winner = this.players.find(p => p.alive);
+                        if (winner.isUser) {
+                            this.addLog(`🏆 YOU WIN!`);
+                        } else {
+                            this.addLog(`🏆 Player ${winner.id} WINS!`);
+                        }
+                    }
+                    return;
+                }
+
+                const now = Date.now();
+                const userPlayer = this.players.find(p => p.isUser && p.alive);
+
+                this.players.forEach(p => {
+                    if (!p.alive) return;
+                    
+                    if (p.isUser) {
+                        const speed = 2;
+                        let moveX = 0, moveY = 0;
+                        if (this.keys['w'] || this.keys['W']) moveY -= speed;
+                        if (this.keys['s'] || this.keys['S']) moveY += speed;
+                        if (this.keys['a'] || this.keys['A']) moveX -= speed;
+                        if (this.keys['d'] || this.keys['D']) moveX += speed;
+                        
+                        if (userPlayer) {
+                            const arena = document.getElementById('arena');
+                            const rect = arena.getBoundingClientRect();
+                            const relX = this.mouseX - rect.left - p.x;
+                            const relY = this.mouseY - rect.top - p.y;
+                            p.angle = Math.atan2(relY, relX);
+                        }
+                        
+                        const newX = p.x + moveX;
+                        const newY = p.y + moveY;
+                        
+                        if (!this.isCollidingWithRock(newX, newY, 10)) {
+                            p.x = newX;
+                            p.y = newY;
+                        }
+                    } else {
+                        if (Math.random() < 0.05) {
+                            p.angle = Math.random() * Math.PI * 2;
+                            const speed = 2;
+                            p.vx = Math.cos(p.angle) * speed;
+                            p.vy = Math.sin(p.angle) * speed;
+                        }
+                        
+                        const newX = p.x + p.vx;
+                        const newY = p.y + p.vy;
+                        
+                        if (!this.isCollidingWithRock(newX, newY, 10)) {
+                            p.x = newX;
+                            p.y = newY;
+                        }
+                    }
+                    
+                    p.x = Math.max(0, Math.min(550, p.x));
+                    p.y = Math.max(0, Math.min(350, p.y));
+                });
+
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    const b = this.bullets[i];
+                    let newX = b.x + b.vx;
+                    let newY = b.y + b.vy;
+                    
+                    let bounced = false;
+                    this.rocks.forEach(rock => {
+                        const rockCenterX = rock.x + rock.width / 2;
+                        const rockCenterY = rock.y + rock.height / 2;
+                        const dist = Math.hypot(newX - rockCenterX, newY - rockCenterY);
+                        if (dist < 15) {
+                            b.vx *= -0.8;
+                            b.vy *= -0.8;
+                            bounced = true;
+                        }
+                    });
+                    
+                    if (bounced) {
+                        newX = b.x + b.vx;
+                        newY = b.y + b.vy;
+                    }
+                    
+                    b.x = newX;
+                    b.y = newY;
+                    
+                    if (b.x < 0 || b.x > 550 || b.y < 0 || b.y > 350) {
+                        this.bullets.splice(i, 1);
+                    }
+                }
+
+                this.players.forEach(p1 => {
+                    if (!p1.alive || p1.isUser) return;
+                    this.players.forEach(p2 => {
+                        if (!p2.alive || p1.id === p2.id) return;
+                        const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                        
+                        const shootCooldown = this.gameMode === 'sniper' ? 1500 : 500;
+                        const canShoot = dist < 200 && Math.random() < 0.2 && now - this.lastShotTime[p1.id] > shootCooldown;
+                        
+                        if (canShoot) {
+                            this.lastShotTime[p1.id] = now;
+                            const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                            const bulletSpeed = this.gameMode === 'sniper' ? 7 : 5;
+                            this.bullets.push({
+                                id: this.bulletIdCounter++,
+                                x: p1.x,
+                                y: p1.y,
+                                vx: Math.cos(angle) * bulletSpeed,
+                                vy: Math.sin(angle) * bulletSpeed,
+                                shooterId: p1.id,
+                                targetId: p2.id
+                            });
+                        }
+                    });
+                });
+
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    const bullet = this.bullets[i];
+                    let hitTarget = null;
+                    
+                    for (const p of this.players) {
+                        if (!p.alive || p.id === bullet.shooterId) continue;
+                        const dist = Math.hypot(bullet.x - p.x, bullet.y - p.y);
+                        if (dist < 15) {
+                            hitTarget = p;
+                            break;
+                        }
+                    }
+                    
+                    if (hitTarget) {
+                        const damage = this.gameMode === 'sniper' ? 100 : 25;
+                        hitTarget.health -= damage;
+                        if (hitTarget.health <= 0) {
+                            hitTarget.alive = false;
+                            const shooter = this.players.find(p => p.id === bullet.shooterId);
+                            if (hitTarget.isUser) {
+                                this.addLog(`💀 YOU were shot by Player ${shooter.id}`);
+                            } else if (shooter.isUser) {
+                                this.addLog(`💥 You shot Player ${hitTarget.id}`);
+                            } else {
+                                this.addLog(`💥 Player ${hitTarget.id} shot by Player ${shooter.id}`);
+                            }
+                        }
+                        this.bullets.splice(i, 1);
+                    }
+                }
+
+                this.render();
+                requestAnimationFrame(() => this.simulate());
+            },
+
+            render() {
+                const arena = document.getElementById('arena');
+                
+                this.rocks.forEach((rock, idx) => {
+                    let rockEl = document.getElementById(`rock-${idx}`);
+                    if (!rockEl) {
+                        rockEl = document.createElement('div');
+                        rockEl.id = `rock-${idx}`;
+                        rockEl.className = 'rock';
+                        arena.appendChild(rockEl);
+                    }
+                    rockEl.style.left = rock.x + 'px';
+                    rockEl.style.top = rock.y + 'px';
+                });
+
+                this.players.forEach(p => {
+                    let playerEl = document.getElementById(`player-${p.id}`);
+                    if (!playerEl && p.alive) {
+                        playerEl = document.createElement('div');
+                        playerEl.id = `player-${p.id}`;
+                        playerEl.className = 'player' + (p.isUser ? ' user' : '');
+                        playerEl.innerHTML = `<div class="health-bar"><div class="health-bar-fill"></div></div>${p.isUser ? 'YOU' : p.id}`;
+                        arena.appendChild(playerEl);
+                    }
+                    if (playerEl) {
+                        playerEl.style.left = p.x + 'px';
+                        playerEl.style.top = p.y + 'px';
+                        playerEl.style.background = p.isUser ? '#ffff00' : `hsl(${p.id * 36}, 100%, 50%)`;
+                        const healthFill = playerEl.querySelector('.health-bar-fill');
+                        if (healthFill) healthFill.style.width = (p.health / 100 * 25) + 'px';
+                        if (!p.alive) playerEl.remove();
+                    }
+                });
+
+                this.bullets.forEach(bullet => {
+                    let bulletEl = document.getElementById(`bullet-${bullet.id}`);
+                    if (!bulletEl) {
+                        bulletEl = document.createElement('div');
+                        bulletEl.id = `bullet-${bullet.id}`;
+                        bulletEl.className = 'bullet';
+                        arena.appendChild(bulletEl);
+                    }
+                    bulletEl.style.left = bullet.x + 'px';
+                    bulletEl.style.top = bullet.y + 'px';
+                });
+
+                const userPlayer = this.players.find(p => p.isUser);
+                document.getElementById('alive').textContent = this.players.filter(p => p.alive).length;
+                document.getElementById('userHealth').textContent = userPlayer ? userPlayer.health : 0;
+            },
+
+            addLog(msg) {
+                this.log.push(msg);
+                const logEl = document.getElementById('log');
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = msg;
+                logEl.appendChild(entry);
+                logEl.scrollTop = logEl.scrollHeight;
+            },
+
+            reset() {
+                this.running = false;
+                this.init();
+                document.getElementById('log').innerHTML = '';
+            }
+        };
+
+        const rpsSimulator = {
+            sprites: [],
+            log: [],
+            running: false,
+            spriteIdCounter: 0,
+
+            init() {
+                this.sprites = [];
+                this.log = [];
+                this.spriteIdCounter = 0;
+                document.getElementById('rpsLog').innerHTML = '';
+                
+                const types = ['rock', 'paper', 'scissors'];
+                for (let i = 0; i < 10; i++) {
+                    for (let type of types) {
+                        this.sprites.push({
+                            id: this.spriteIdCounter++,
+                            type: type,
+                            x: Math.random() * 520,
+                            y: Math.random() * 370,
+                            vx: (Math.random() - 0.5) * 3,
+                            vy: (Math.random() - 0.5) * 3
+                        });
+                    }
+                }
+                
+                this.render();
+            },
+
+            startGame() {
+                if (this.running) return;
+                this.running = true;
+                this.addLog('RPS Battle Started!');
+                this.simulate();
+            },
+
+            simulate() {
+                if (!this.running || this.sprites.length === 0) {
+                    this.running = false;
+                    if (this.sprites.length === 0) {
+                        this.addLog('All sprites eliminated!');
+                    }
+                    return;
+                }
+
+                // Movement
+                this.sprites.forEach(s => {
+                    s.x += s.vx;
+                    s.y += s.vy;
+                    
+                    if (s.x < 0 || s.x > 550) s.vx *= -1;
+                    if (s.y < 0 || s.y > 350) s.vy *= -1;
+                    
+                    s.x = Math.max(0, Math.min(550, s.x));
+                    s.y = Math.max(0, Math.min(350, s.y));
+                });
+
+                // Collision detection
+                for (let i = 0; i < this.sprites.length; i++) {
+                    for (let j = i + 1; j < this.sprites.length; j++) {
+                        const s1 = this.sprites[i];
+                        const s2 = this.sprites[j];
+                        const dist = Math.hypot(s1.x - s2.x, s1.y - s2.y);
+                        
+                        if (dist < 20) {
+                            const winner = this.determineWinner(s1.type, s2.type);
+                            if (winner === 1) {
+                                this.addLog(`${s1.type} eliminates ${s2.type}`);
+                                this.sprites.splice(j, 1);
+                                j--;
+                            } else if (winner === 2) {
+                                this.addLog(`${s2.type} eliminates ${s1.type}`);
+                                this.sprites.splice(i, 1);
+                                i--;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                this.render();
+                requestAnimationFrame(() => this.simulate());
+            },
+
+            determineWinner(type1, type2) {
+                if (type1 === type2) return 0;
+                if (type1 === 'rock' && type2 === 'scissors') return 1;
+                if (type1 === 'paper' && type2 === 'rock') return 1;
+                if (type1 === 'scissors' && type2 === 'paper') return 1;
+                return 2;
+            },
+
+            render() {
+                const arena = document.getElementById('rpsArena');
+                arena.innerHTML = '';
+                
+                this.sprites.forEach(s => {
+                    const el = document.createElement('div');
+                    el.className = 'rps-sprite';
+                    el.style.left = s.x + 'px';
+                    el.style.top = s.y + 'px';
+                    
+                    if (s.type === 'rock') el.textContent = '🪨';
+                    else if (s.type === 'paper') el.textContent = '📄';
+                    else el.textContent = '✂️';
+                    
+                    arena.appendChild(el);
+                });
+
+                const rockCount = this.sprites.filter(s => s.type === 'rock').length;
+                const paperCount = this.sprites.filter(s => s.type === 'paper').length;
+                const scissorCount = this.sprites.filter(s => s.type === 'scissors').length;
+                
+                document.getElementById('rockCount').textContent = rockCount;
+                document.getElementById('paperCount').textContent = paperCount;
+                document.getElementById('scissorCount').textContent = scissorCount;
+                document.getElementById('survivors').textContent = this.sprites.length;
+            },
+
+            addLog(msg) {
+                this.log.push(msg);
+                const logEl = document.getElementById('rpsLog');
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = msg;
+                logEl.appendChild(entry);
+                logEl.scrollTop = logEl.scrollHeight;
+            },
+
+            reset() {
+                this.running = false;
+                this.init();
+            }
+        };
+
+        document.addEventListener('keydown', (e) => {
+            simulator.keys[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            simulator.keys[e.key] = false;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            simulator.mouseX = e.clientX;
+            simulator.mouseY = e.clientY;
+        });
+
+        document.getElementById('arena').addEventListener('click', () => {
+            const userPlayer = simulator.players.find(p => p.isUser && p.alive);
+            if (userPlayer && simulator.running) {
+                const now = Date.now();
+                const shootCooldown = simulator.gameMode === 'sniper' ? 1500 : 500;
+                if (now - simulator.lastShotTime[0] > shootCooldown) {
+                    simulator.lastShotTime[0] = now;
+                    const bulletSpeed = simulator.gameMode === 'sniper' ? 7 : 5;
+                    simulator.bullets.push({
+                        id: simulator.bulletIdCounter++,
+                        x: userPlayer.x,
+                        y: userPlayer.y,
+                        vx: Math.cos(userPlayer.angle) * bulletSpeed,
+                        vy: Math.sin(userPlayer.angle) * bulletSpeed,
+                        shooterId: 0,
+                        targetId: -1
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
