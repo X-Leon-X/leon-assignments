@@ -114,6 +114,7 @@
             cursor: pointer;
             width: 100%;
             font-size: 16px;
+            margin: 5px 0;
         }
         button:hover {
             background: #00cc00;
@@ -124,6 +125,11 @@
             border-radius: 4px;
             margin: 10px 0;
             font-size: 12px;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
     </style>
 </head>
@@ -143,7 +149,10 @@
             <strong>Controls:</strong> WASD to move, MOUSE to aim, CLICK to shoot
         </div>
         <div class="log" id="log"></div>
-        <button onclick="simulator.start()">Start Battle</button>
+        <div class="button-group">
+            <button onclick="simulator.startGame('standard')">Standard Game</button>
+            <button onclick="simulator.startGame('sniper')">Sniper Game</button>
+        </div>
         <button onclick="simulator.reset()">Reset</button>
     </div>
 
@@ -160,6 +169,7 @@
             mouseX: 0,
             mouseY: 0,
             userPlayerId: -1,
+            gameMode: 'standard',
 
             init() {
                 this.players = [];
@@ -229,10 +239,11 @@
                 this.render();
             },
 
-            start() {
+            startGame(mode) {
                 if (this.running) return;
+                this.gameMode = mode;
                 this.running = true;
-                this.addLog("Battle started!");
+                this.addLog(`Battle started! Mode: ${mode === 'standard' ? 'STANDARD' : 'SNIPER'}`);
                 this.simulate();
             },
 
@@ -314,11 +325,31 @@
                     p.y = Math.max(0, Math.min(350, p.y));
                 });
 
-                // Update bullets with proper ID cleanup
+                // Update bullets with rock bouncing
                 for (let i = this.bullets.length - 1; i >= 0; i--) {
                     const b = this.bullets[i];
-                    b.x += b.vx;
-                    b.y += b.vy;
+                    let newX = b.x + b.vx;
+                    let newY = b.y + b.vy;
+                    
+                    // Check for rock collision and bounce
+                    let bounced = false;
+                    this.rocks.forEach(rock => {
+                        if (newX > rock.x && newX < rock.x + rock.width &&
+                            newY > rock.y && newY < rock.y + rock.height) {
+                            // Bounce: reverse velocity
+                            b.vx *= -0.8;
+                            b.vy *= -0.8;
+                            bounced = true;
+                        }
+                    });
+                    
+                    if (bounced) {
+                        newX = b.x + b.vx;
+                        newY = b.y + b.vy;
+                    }
+                    
+                    b.x = newX;
+                    b.y = newY;
                     
                     if (b.x < 0 || b.x > 550 || b.y < 0 || b.y > 350) {
                         this.bullets.splice(i, 1);
@@ -327,23 +358,24 @@
 
                 // Gun combat with reload
                 this.players.forEach(p1 => {
-                    if (!p1.alive) return;
+                    if (!p1.alive || p1.isUser) return; // Only AI shoots automatically
                     this.players.forEach(p2 => {
                         if (!p2.alive || p1.id === p2.id) return;
                         const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
                         
-                        // User can always shoot, AI has cooldown and range limit
-                        const canShoot = p1.isUser ? true : (dist < 200 && Math.random() < 0.2 && now - this.lastShotTime[p1.id] > 500);
+                        const shootCooldown = this.gameMode === 'sniper' ? 1500 : 500;
+                        const canShoot = dist < 200 && Math.random() < 0.2 && now - this.lastShotTime[p1.id] > shootCooldown;
                         
-                        if (canShoot && now - this.lastShotTime[p1.id] > 500) {
+                        if (canShoot) {
                             this.lastShotTime[p1.id] = now;
-                            const angle = p1.isUser ? p1.angle : Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                            const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                            const bulletSpeed = this.gameMode === 'sniper' ? 7 : 5;
                             this.bullets.push({
                                 id: this.bulletIdCounter++,
                                 x: p1.x,
                                 y: p1.y,
-                                vx: Math.cos(angle) * 5,
-                                vy: Math.sin(angle) * 5,
+                                vx: Math.cos(angle) * bulletSpeed,
+                                vy: Math.sin(angle) * bulletSpeed,
                                 shooterId: p1.id,
                                 targetId: p2.id
                             });
@@ -358,7 +390,8 @@
                     if (target) {
                         const dist = Math.hypot(bullet.x - target.x, bullet.y - target.y);
                         if (dist < 15) {
-                            target.health -= 25;
+                            const damage = this.gameMode === 'sniper' ? 100 : 25;
+                            target.health -= damage;
                             if (target.health <= 0) {
                                 target.alive = false;
                                 const shooter = this.players.find(p => p.id === bullet.shooterId);
@@ -468,14 +501,16 @@
             const userPlayer = simulator.players.find(p => p.isUser && p.alive);
             if (userPlayer && simulator.running) {
                 const now = Date.now();
-                if (now - simulator.lastShotTime[0] > 500) {
+                const shootCooldown = simulator.gameMode === 'sniper' ? 1500 : 500;
+                if (now - simulator.lastShotTime[0] > shootCooldown) {
                     simulator.lastShotTime[0] = now;
+                    const bulletSpeed = simulator.gameMode === 'sniper' ? 7 : 5;
                     simulator.bullets.push({
                         id: simulator.bulletIdCounter++,
                         x: userPlayer.x,
                         y: userPlayer.y,
-                        vx: Math.cos(userPlayer.angle) * 5,
-                        vy: Math.sin(userPlayer.angle) * 5,
+                        vx: Math.cos(userPlayer.angle) * bulletSpeed,
+                        vy: Math.sin(userPlayer.angle) * bulletSpeed,
                         shooterId: 0,
                         targetId: -1
                     });
