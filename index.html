@@ -309,7 +309,14 @@
                     const b = this.bullets[i];
                     let newX = b.x + b.vx;
                     let newY = b.y + b.vy;
-                    
+
+                    // Reduce lifetime and remove frozen bullets
+                    b.lifetime--;
+                    if (b.lifetime <= 0) {
+                        this.bullets.splice(i, 1);
+                        continue;
+                    }
+
                     // Check for rock collision and bounce
                     let bounced = false;
                     this.rocks.forEach(rock => {
@@ -320,6 +327,11 @@
                             // Bounce: reverse velocity
                             b.vx *= -0.8;
                             b.vy *= -0.8;
+
+                            // Prevent bullets from freezing midair
+                            if (Math.abs(b.vx) < 0.5) b.vx = 0.5 * Math.sign(b.vx);
+                            if (Math.abs(b.vy) < 0.5) b.vy = 0.5 * Math.sign(b.vy);
+                            
                             bounced = true;
                         }
                     });
@@ -358,8 +370,10 @@
                                 vx: Math.cos(angle) * bulletSpeed,
                                 vy: Math.sin(angle) * bulletSpeed,
                                 shooterId: p1.id,
-                                targetId: p2.id
+                                targetId: p2.id,
+                                lifetime: 120 // lasts ~2 seconds
                             });
+
                         }
                     });
                 });
