@@ -517,26 +517,35 @@
             simulator.mouseY = e.clientY;
         });
 
-        document.getElementById('arena').addEventListener('click', () => {
-            const userPlayer = simulator.players.find(p => p.isUser && p.alive);
-            if (userPlayer && simulator.running) {
-                const now = Date.now();
-                const shootCooldown = simulator.gameMode === 'sniper' ? 1500 : 500;
-                if (now - simulator.lastShotTime[0] > shootCooldown) {
-                    simulator.lastShotTime[0] = now;
-                    const bulletSpeed = simulator.gameMode === 'sniper' ? 7 : 5;
-                    simulator.bullets.push({
-                        id: simulator.bulletIdCounter++,
-                        x: userPlayer.x,
-                        y: userPlayer.y,
-                        vx: Math.cos(userPlayer.angle) * bulletSpeed,
-                        vy: Math.sin(userPlayer.angle) * bulletSpeed,
-                        shooterId: 0,
-                        targetId: -1
-                    });
+        const arenaEl = document.getElementById('arena'); // change 'arena' if your actual ID is different
+
+        if (arenaEl) {
+            arenaEl.addEventListener('click', () => {
+                const userPlayer = simulator.players.find(p => p.isUser && p.alive);
+                if (userPlayer && simulator.running) {
+                    const now = Date.now();
+                    const shootCooldown = simulator.gameMode === 'sniper' ? 1500 : 500;
+
+                    if (now - simulator.lastShotTime[0] > shootCooldown) {
+                        simulator.lastShotTime[0] = now;
+                        const bulletSpeed = simulator.gameMode === 'sniper' ? 7 : 5;
+
+                        simulator.bullets.push({
+                            id: simulator.bulletIdCounter++,
+                            x: userPlayer.x,
+                            y: userPlayer.y,
+                            vx: Math.cos(userPlayer.angle) * bulletSpeed,
+                            vy: Math.sin(userPlayer.angle) * bulletSpeed,
+                            shooterId: 0,
+                            targetId: -1
+                        });
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            console.warn('Arena element with id="arena" not found.');
+        }
+
 
         simulator.init();
     </script>
