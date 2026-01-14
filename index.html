@@ -800,8 +800,11 @@
         window.startBattleRoyale = function () {
             document.getElementById('menuScreen').style.display = 'none';
             document.getElementById('battleRoyaleContainer').classList.add('active');
-            simulator.init();
+
+            // Delay init until the arena is actually visible
+            requestAnimationFrame(() => simulator.init());
         };
+
 
         window.startRPS = function () {
             document.getElementById('menuScreen').style.display = 'none';
