@@ -134,27 +134,6 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚔️ AI Battle Royale Simulator</h1>
-        <div class="arena" id="arena"></div>
-        <div class="stats">
-            <div class="stat-box">
-                <strong>Players Alive:</strong> <span id="alive">10</span>
-            </div>
-            <div class="stat-box">
-                <strong>Your Health:</strong> <span id="userHealth">100</span>
-            </div>
-        </div>
-        <div class="controls">
-            <strong>Controls:</strong> WASD to move, MOUSE to aim, CLICK to shoot
-        </div>
-        <div class="log" id="log"></div>
-        <div class="button-group">
-            <button onclick="simulator.startGame('standard')">Standard Game</button>
-            <button onclick="simulator.startGame('sniper')">Sniper Game</button>
-        </div>
-        <button onclick="simulator.reset()">Reset</button>
-    </div>
 
     <script>
         const simulator = {
