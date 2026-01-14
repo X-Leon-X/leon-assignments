@@ -313,6 +313,11 @@
                     // Reduce lifetime and remove frozen bullets
                     b.lifetime--;
                     if (b.lifetime <= 0) {
+                        // Remove bullet DOM element
+                        const bulletEl = document.getElementById(`bullet-${bullet.id}`);
+                        if (bulletEl) bulletEl.remove();
+
+                        // Remove bullet from array
                         this.bullets.splice(i, 1);
                         continue;
                     }
@@ -331,7 +336,7 @@
                             // Prevent bullets from freezing midair
                             if (Math.abs(b.vx) < 0.5) b.vx = 0.5 * Math.sign(b.vx);
                             if (Math.abs(b.vy) < 0.5) b.vy = 0.5 * Math.sign(b.vy);
-                            
+
                             bounced = true;
                         }
                     });
@@ -345,7 +350,13 @@
                     b.y = newY;
                     
                     if (b.x < 0 || b.x > 550 || b.y < 0 || b.y > 350) {
+                        // Remove bullet DOM element
+                        const bulletEl = document.getElementById(`bullet-${bullet.id}`);
+                        if (bulletEl) bulletEl.remove();
+
+                        // Remove bullet from array
                         this.bullets.splice(i, 1);
+
                     }
                 }
 
@@ -407,7 +418,13 @@
                                 this.addLog(`💥 Player ${hitTarget.id} shot by Player ${shooter.id}`);
                             }
                         }
+                        // Remove bullet DOM element
+                        const bulletEl = document.getElementById(`bullet-${bullet.id}`);
+                        if (bulletEl) bulletEl.remove();
+
+                        // Remove bullet from array
                         this.bullets.splice(i, 1);
+
                     }
                 }
 
